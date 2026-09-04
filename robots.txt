@@ -1,0 +1,9 @@
+# robots.txt - Jiaxing Weeyuan Kids Ride on Toy Cars
+# Allow all search engines to crawl all pages
+
+User-agent: *
+Allow: /
+Disallow: /assets/js/
+
+# Sitemap location
+Sitemap: https://www.weeyuantoys.cn/sitemap.xml
