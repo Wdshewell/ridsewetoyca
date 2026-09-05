@@ -25,16 +25,69 @@
     });
   }
 
-  // ===== Header Shadow on Scroll =====
+  // ===== Header Shadow + Auto-hide on Scroll (with Hover Pin) =====
   const header = document.querySelector('.header');
   if (header) {
-    window.addEventListener('scroll', function() {
-      if (window.scrollY > 10) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
+    let lastY = window.scrollY;
+    let ticking = false;
+    let hideTimer = null;
+    let isHovered = false;
+    const IDLE_MS = 1500;
+
+    function scheduleHide() {
+      if (hideTimer) clearTimeout(hideTimer);
+      hideTimer = setTimeout(function() {
+        if (isHovered) return; // Hovering: skip auto-hide
+        if (window.scrollY > 100) header.classList.add('nav-hidden');
+      }, IDLE_MS);
+    }
+
+    function pinHeader() {
+      isHovered = true;
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      header.classList.remove('nav-hidden');
+    }
+
+    function unpinHeader() {
+      isHovered = false;
+      // Resume auto-hide only if user has scrolled past the top
+      if (window.scrollY > 100) scheduleHide();
+    }
+
+    function update() {
+      const y = window.scrollY;
+
+      // Shadow toggle
+      if (y > 10) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
+
+      // Direction-based show/hide (skip when hovering)
+      if (isHovered) {
+        // keep header visible
+      } else if (y < 10) {
+        header.classList.remove('nav-hidden');
+        if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      } else if (y > lastY) {
+        header.classList.add('nav-hidden');
+      } else if (y < lastY) {
+        header.classList.remove('nav-hidden');
       }
-    });
+
+      lastY = y;
+      if (!isHovered) scheduleHide();
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', function() {
+      if (!ticking) {
+        requestAnimationFrame(update);
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // Hover pins the header in view; leave resumes auto-hide
+    header.addEventListener('mouseenter', pinHeader);
+    header.addEventListener('mouseleave', unpinHeader);
   }
 
   // ===== FAQ Accordion =====
@@ -252,5 +305,108 @@
   if (yearEl) {
     yearEl.textContent = new Date().getFullYear();
   }
+
+  // ===== Cookie Consent Banner (GDPR / CCPA) =====
+  (function initCookieConsent() {
+    const banner = document.getElementById('wyCookieBanner');
+    if (!banner) return;
+
+    const KEY = 'wy_cookie_consent_v1';
+    let decided = false;
+    try { decided = localStorage.getItem(KEY) !== null; } catch (e) {}
+    if (decided) return;
+
+    const acceptBtn = document.getElementById('wyCookieAcceptAll');
+    const rejectBtn = document.getElementById('wyCookieReject');
+
+    banner.hidden = false;
+
+    function dismiss(choice) {
+      try { localStorage.setItem(KEY, choice); } catch (e) {}
+      banner.hidden = true;
+    }
+
+    if (acceptBtn) acceptBtn.addEventListener('click', function() { dismiss('all'); });
+    if (rejectBtn) rejectBtn.addEventListener('click', function() { dismiss('essential'); });
+  })();
+
+  // ===== Back to Top Button =====
+  (function initBackToTop() {
+    const btn = document.querySelector('.wy-back-to-top');
+    if (!btn) return;
+
+    const TOP_THRESHOLD = 10;
+    const BOTTOM_THRESHOLD = 80;
+    const IDLE_MS = 1500;
+
+    let hideTimer = null;
+
+    function isAtBottom() {
+      return window.scrollY + window.innerHeight >=
+        document.documentElement.scrollHeight - BOTTOM_THRESHOLD;
+    }
+
+    function clearHideTimer() {
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    }
+
+    function scheduleHide() {
+      clearHideTimer();
+      hideTimer = setTimeout(function() {
+        if (isAtBottom()) return; // pin mode keeps it visible
+        btn.classList.remove('is-visible', 'is-pinned');
+      }, IDLE_MS);
+    }
+
+    function hideBtn() {
+      clearHideTimer();
+      btn.classList.remove('is-visible', 'is-pinned');
+    }
+
+    function showTranslucent() {
+      btn.classList.add('is-visible');
+      btn.classList.remove('is-pinned');
+      scheduleHide();
+    }
+
+    function showPinned() {
+      btn.classList.add('is-visible', 'is-pinned');
+      clearHideTimer();
+    }
+
+    // Click: smooth scroll to top
+    btn.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Visibility state machine
+    function update() {
+      const y = window.scrollY;
+      if (y < TOP_THRESHOLD) {
+        // At page top -> never show
+        hideBtn();
+      } else if (isAtBottom()) {
+        // At page bottom -> pin fully opaque
+        showPinned();
+      } else {
+        // Mid-page while scrolling -> translucent, auto-hide after idle
+        showTranslucent();
+      }
+    }
+
+    let ticking = false;
+    window.addEventListener('scroll', function() {
+      if (!ticking) {
+        requestAnimationFrame(function() {
+          update();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    window.addEventListener('resize', update);
+    update();
+  })();
 
 })();
