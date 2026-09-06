@@ -282,7 +282,7 @@
     window.googleTranslateElementInit = function() {
       new google.translate.TranslateElement({
         pageLanguage: 'en',
-        includedLanguages: 'en,ar,fr,pt,es,it',
+        includedLanguages: 'en,ar,de,fr,pt,es,it',
         layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
         autoDisplay: false
       }, 'google_translate_element');
