@@ -409,4 +409,33 @@
     update();
   })();
 
+  // ===== Product Card Hover Video =====
+  (function initProductHoverVideo() {
+    const videos = document.querySelectorAll('.product-card video.product-image-video');
+    if (!videos.length) return;
+
+    // Touch devices have no hover: expose native controls so users can tap to play
+    const noHover = window.matchMedia && window.matchMedia('(hover: none)').matches;
+
+    videos.forEach(function(video) {
+      if (noHover) {
+        video.controls = true;
+        return;
+      }
+      const card = video.closest('.product-card');
+      if (!card) return;
+
+      card.addEventListener('mouseenter', function() {
+        // Autoplay requires muted; play() may still be rejected by some browsers
+        const p = video.play();
+        if (p && typeof p.catch === 'function') p.catch(function() {});
+      });
+
+      card.addEventListener('mouseleave', function() {
+        video.pause();
+        try { video.currentTime = 0; } catch (e) {}
+      });
+    });
+  })();
+
 })();
