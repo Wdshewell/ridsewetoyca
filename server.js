@@ -8,7 +8,18 @@ const types = {
   '.js': 'text/javascript',
   '.xml': 'application/xml',
   '.txt': 'text/plain',
-  '.md': 'text/markdown'
+  '.md': 'text/markdown',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.ogv': 'video/ogg',
+  '.mov': 'video/quicktime'
 };
 
 http.createServer((req, res) => {
